@@ -10,7 +10,7 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}" defer></script>
+    {{-- <script src="{{ asset('js/app.js') }}" defer></script> --}}
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -18,6 +18,58 @@
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <style>
+        .tree-header{
+            background-color: var(--bs-body-bg);
+        }
+        .blue:hover {
+
+            color: blue;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .active {
+            color: blue;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: inherit;
+        }
+
+        .collapse {
+            -moz-transition: .5s;
+            -ms-transition: .5s;
+            -o-transition: .5s;
+            -webkit-transition: .5s;
+            transition: .5s;
+        }
+
+        .modal-content {
+            animation: fade .3s ease-in-out;
+        }
+
+        @keyframes fade {
+            0% {
+                transform: scale(0.0);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }  
+
+        @media (prefers-reduced-motion: reduce) {
+            .collapsing {
+                transition-property: height, visibility;
+                transition-duration: .35s;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="app">
