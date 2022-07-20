@@ -349,7 +349,7 @@
                     <div class="modal-body">
                         <form 
                             enctype="multipart/form-data"
-                            action="{{url('/api/data')}}" 
+                            action="{{url('/api/data/new-data')}}" 
                             method="POST" 
                             class="new-sip-form mb-2">
                                 <div class="mb-3 mx-3">
@@ -377,7 +377,6 @@
                                 </div>
                                 <div class="mb-3 mx-3">
                                     <label for="area-id" class="form-label">Content</label>
-                                    <!-- MAX_FILE_SIZE must precede the file input field -->
                                     <input type="hidden" name="MAX_FILE_SIZE" value="9000000" />
                                     <input type="file" class="form-control" name="files[]" autocomplete="off" multiple>
                                 </div>
@@ -402,7 +401,7 @@
                     <div class="modal-body">
                         <form 
                             enctype="multipart/form-data"
-                            action="{{url('/api/data')}}" 
+                            action="{{url('/api/data/edit-data')}}" 
                             method="POST" 
                             class="new-sip-form mb-2">
                                 <div class="mb-3 mx-3">
@@ -423,17 +422,18 @@
                                 </div>
                                 <div class="mb-3 mx-3">
                                     <label for="area-id" class="form-label">Title</label>
-                                    <input type="text" class="form-control " id="area-id" name="title" value="" autocomplete="off" required>
+                                    <input type="text" class="form-control  edit-title-field" id="area-id" name="title" value="" autocomplete="off" required>
                                 </div>
                                 <div class="mb-3 mx-3">
                                     <label for="area-id" class="form-label">Description</label>
-                                    <input type="text" class="form-control" id="area-id" name="description" value="" autocomplete="off">
+                                    <input type="text" class="form-control edit-description-field" id="area-id" name="description" value="" autocomplete="off">
                                 </div>
                                 <div class="mb-3 mx-3">
                                     <label for="area-id" class="form-label">Content</label>
                                     <input type="hidden" name="MAX_FILE_SIZE" value="9000000" />
                                     <input type="file" class="form-control" name="files[]" autocomplete="off" multiple>
                                 </div>
+                                
                                 <div class="mb-3 d-flex gap-2 justify-content-end me-3">
                                     <button type="button dismiss-modal" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                     <button type="submit" class="btn btn-primary" name='submit'>Submit</button>
@@ -479,6 +479,8 @@
         var editAreaField = document.querySelector('.edit-area-field');
         var editParameterField = document.querySelector('.edit-parameter-field');
         var editIndicatorField = document.querySelector('.edit-indicator-field');
+        var editTitleField = document.querySelector('.edit-title-field');
+        var editDescriptionField = document.querySelector('.edit-description-field');
 
         // Global Executions
         hyperlinks.forEach(node => {
@@ -504,7 +506,6 @@
             );
         }
 
-        
         parameters.forEach(parameter => {  
             parameter.addEventListener('click', () => {
                 activeParameter = parameter.textContent;
@@ -512,7 +513,7 @@
                 removeOldData();
                 showSystemObjects(activeParameterId); 
                 showImplementationsObjects(activeParameterId);
-                showOutputsObjects(activeParameterId);
+                showOutputsObjects(activeParameterId)
             });
         })
 
@@ -542,7 +543,6 @@
                     alert('Please Select Area and Parameter');
                 } else {
                     addDataModal.show();
-                    // console.log(addDataModal);
                 }
             })
         })
@@ -575,12 +575,40 @@
             const buttonContainer = document.createElement('div');
             const editButton = document.createElement('button');
             const deleteButton = document.createElement('button');
-            
+            const files = document.createTextNode("Files:");
+            const imageContainer = document.createElement('div');
+
+            //files related
+            const parsedFiles = JSON.parse(JSON.stringify(unserialize(object['files'])));
+            for (var key in parsedFiles) {
+                console.log(`${key}: ${parsedFiles[key]}`);
+                const image = document.createElement('img');
+                const anchor = document.createElement('a');
+
+                image.setAttribute(
+                    'src',
+                    "{{asset('storage/files/')}}" + "/" + parsedFiles[key]
+                );
+
+                image.classList.add('image-from-database');
+                // href="path/to/image.jpg" alt="Image description" target="_blank"
+                anchor.setAttribute('href', "{{asset('storage/files/')}}" + "/" + parsedFiles[key]);
+                anchor.setAttribute('alt', parsedFiles[key]);
+                anchor.setAttribute('target', '_blank')
+
+                anchor.appendChild(image);
+                imageContainer.appendChild(anchor);
+                // <img class="w-100" src="{{ asset('storage/files/logo.png') }}" />
+                // console.log("{{asset('storage/files/')}}" + "/" + parsedFiles[key]);
+
+            }
+
             //defining inner contents
             const title = document.createTextNode("Title: " + object['title']);
             const description = document.createTextNode("Description: " + object['description']);
-            const files = document.createTextNode("Files: " + object['title']);
 
+
+            //inner nodes
             editButton.innerHTML = 'Edit';
             deleteButton.innerHTML = 'Delete';
 
@@ -603,6 +631,13 @@
             itemContainer.classList.add('mb-3');
             itemContainer.classList.add('p-2')
 
+            imageContainer.classList.add('d-flex');
+            imageContainer.classList.add('flex-wrap');
+            imageContainer.classList.add('gap-2');
+            imageContainer.classList.add('border-rounded');
+            imageContainer.classList.add('align-items-center');
+
+            
             //appending elements
             buttonContainer.appendChild(editButton);
             buttonContainer.appendChild(deleteButton);
@@ -614,19 +649,17 @@
             itemContainer.appendChild(p1);
             itemContainer.appendChild(p2);
             itemContainer.appendChild(p3);
+            itemContainer.appendChild(imageContainer);
             itemContainer.appendChild(buttonContainer);
             
 
             //eventListeners
             editButton.addEventListener('click', function(){
-                console.log(activeArea);
-                console.log(activeParameterId);
-                console.log(object);
-                
                 editAreaField.value = activeArea;
                 editParameterField.value = activeParameter;
                 editIndicatorField.value = itemContainer.parentNode.parentNode.getAttribute('indicator');
-                
+                editTitleField.value = object['title'];
+                editDescriptionField.value = object['description'];
                 
                 editDataModal.show();
             }, false);
@@ -650,7 +683,7 @@
             itemContainer.classList.add('item-container');
             return itemContainer;
         }
-        
+
         async function showSystemObjects(parameter_Id){
             const url = '{{url('/api/parameter/')}}' + '/' + parameter_Id;
             const response = await fetch(url);
@@ -662,7 +695,6 @@
             } else {
                 sipListSection.appendChild(declareNoDataFound());
             }
-            
         }
 
         async function showImplementationsObjects(parameter_Id){
@@ -692,53 +724,127 @@
             }
         }
 
-        // function editData(){
-        //     areaField.value = `Area ${activeArea}`;
-        //     activeAreaIdField.value = activeArea;
-
-        //     parameterField.value = activeParameter;
-        //     activeParameterIdField.value = activeParameterId;
-
-        //     activeIndicatorId = node.getAttribute('indicator-id');
-        //     activeIndicatorIdField.value = activeIndicatorId;
-
-        //     if(node.getAttribute('indicator') === 'sip'){
-        //         indicatorField.value = 'System - Inputs and Processes';
-        //     } else if(node.getAttribute('indicator') === 'implementations'){
-        //         indicatorField.value =  'Implementations'
-        //     } else {
-        //         indicatorField.value = 'Outputs';
-        //     }
-                
-        //     activeIndicator.value = node.getAttribute('indicator-id');
-                
-        //     console.log(activeArea);
-        //     console.log(activeParameter);
-        //     // editDataModal.show();
-        // }
-
         function deleteData(itemId, indicator){
-            console.log(itemId, indicator);
             if(indicator === 'System - Inputs and Processes'){
                 indicator = 'systems';
             } 
             const url = `{{url('/api/data')}}?indicator=${indicator}&itemId=${itemId}`;
-            fetch(url, {
-                method: 'POST'
-            })
-            .then((response) => {
-                if (!response.ok) {
-                    // error processing
-                    throw 'Error';
-                }
-                return response.json()
-            })
-
             if (confirm('Are you sure you want to delete this entry from the database?')) {
-            } else {
-                // Do nothing!
-                console.log('Process Aborted');
+                fetch(url, {
+                    method: 'POST'
+                    });
+
+                removeOldData();
+                showSystemObjects(activeParameterId); 
+                showImplementationsObjects(activeParameterId);
+                showOutputsObjects(activeParameterId)
             }
         }
+
+        function unserialize(data){  
+            var error = function (type, msg, filename, line){throw new window[type](msg, filename, line);};  
+            var read_until = function (data, offset, stopchr){  
+                var buf = [];  
+                var chr = data.slice(offset, offset + 1);  
+                var i = 2;  
+                while(chr != stopchr){  
+                    if((i+offset) > data.length){  
+                        error('Error', 'Invalid');  
+                    }  
+                    buf.push(chr);  
+                    chr = data.slice(offset + (i - 1),offset + i);  
+                    i += 1;  
+                }  
+                return [buf.length, buf.join('')];  
+            };  
+            var read_chrs = function (data, offset, length){  
+                buf = [];  
+                for(var i = 0;i < length;i++){  
+                    var chr = data.slice(offset + (i - 1),offset + i);  
+                    buf.push(chr);  
+                }  
+                return [buf.length, buf.join('')];  
+            };  
+            var _unserialize = function (data, offset){  
+                if(!offset) offset = 0;  
+                var buf = [];  
+                var dtype = (data.slice(offset, offset + 1)).toLowerCase();  
+                
+                var dataoffset = offset + 2;  
+                var typeconvert = new Function('x', 'return x');  
+                var chrs = 0;  
+                var datalength = 0;  
+                
+                switch(dtype){  
+                    case "i":  
+                        typeconvert = new Function('x', 'return parseInt(x)');  
+                        var readData = read_until(data, dataoffset, ';');  
+                        var chrs = readData[0];  
+                        var readdata = readData[1];  
+                        dataoffset += chrs + 1;  
+                    break;  
+                    case "b":  
+                        typeconvert = new Function('x', 'return (parseInt(x) == 1)');  
+                        var readData = read_until(data, dataoffset, ';');  
+                        var chrs = readData[0];  
+                        var readdata = readData[1];  
+                        dataoffset += chrs + 1;  
+                    break;  
+                    case "d":  
+                        typeconvert = new Function('x', 'return parseFloat(x)');  
+                        var readData = read_until(data, dataoffset, ';');  
+                        var chrs = readData[0];  
+                        var readdata = readData[1];  
+                        dataoffset += chrs + 1;  
+                    break;  
+                    case "n":  
+                        readdata = null;  
+                    break;  
+                    case "s":  
+                        var ccount = read_until(data, dataoffset, ':');  
+                        var chrs = ccount[0];  
+                        var stringlength = ccount[1];  
+                        dataoffset += chrs + 2;  
+                        
+                        var readData = read_chrs(data, dataoffset+1, parseInt(stringlength));  
+                        var chrs = readData[0];  
+                        var readdata = readData[1];  
+                        dataoffset += chrs + 2;  
+                        if(chrs != parseInt(stringlength) && chrs != readdata.length){  
+                            error('SyntaxError', 'String length mismatch');  
+                        }  
+                    break;  
+                    case "a":  
+                        var readdata = {};  
+                        
+                        var keyandchrs = read_until(data, dataoffset, ':');  
+                        var chrs = keyandchrs[0];  
+                        var keys = keyandchrs[1];  
+                        dataoffset += chrs + 2;  
+                        
+                        for(var i = 0;i < parseInt(keys);i++){  
+                            var kprops = _unserialize(data, dataoffset);  
+                            var kchrs = kprops[1];  
+                            var key = kprops[2];  
+                            dataoffset += kchrs;  
+                            
+                            var vprops = _unserialize(data, dataoffset);  
+                            var vchrs = vprops[1];  
+                            var value = vprops[2];  
+                            dataoffset += vchrs;  
+                            
+                            readdata[key] = value;  
+                        }  
+                        
+                        dataoffset += 1;  
+                    break;  
+                    default:  
+                        error('SyntaxError', 'Unknown / Unhandled data type(s): ' + dtype);  
+                    break;  
+                }  
+                return [dtype, dataoffset - offset, typeconvert(readdata)];  
+            };  
+            return _unserialize(data, 0)[2];  
+        }  
     </script>
 @endsection

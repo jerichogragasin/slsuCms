@@ -69,6 +69,13 @@
                 transition-duration: .35s;
             }
         }
+
+        .image-from-database {
+            max-width: 200px;
+            max-height: 100px;
+            height: auto;
+            width: auto;
+        }
     </style>
 </head>
 <body>
