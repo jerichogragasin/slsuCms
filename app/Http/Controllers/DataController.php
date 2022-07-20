@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Output;
 use App\Models\System;
 use App\Models\Implementation;
-
+use Facade\FlareClient\Stacktrace\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -70,27 +70,55 @@ class DataController extends Controller
         );
     }
 
-    public function create(){
-        return 'hello';
-    }
 
     public function store(Request $request){
         $formFields = $request->all();
         $targetModel = $request->input('indicator-id');
+
+        // dd($formFields);
+
+        $areaId = $formFields['area_id'];
+        $parameterId = $formFields['parameter_id'];
+        $title = $formFields['title'];
+        $description = $formFields['description'];
+        $filesArray = [];
+
+        if(array_key_exists('files', $formFields)){
+            $files = $formFields['files'];
+            for ($i=0; $i < count($files); $i++) { 
+                $filename = $files[$i]->getClientOriginalName();
+                $file = $files[$i];
+                array_push($filesArray, $filename);
+                $name = $file->getClientOriginalName();
+                $path = $file->storeAs('public/files', $filename);
+                }
+        }   
+
+        $serialized = serialize($filesArray);
+
         if($targetModel == 0){
-            System::create($formFields);
-        } else if ($targetModel == 1){
-            Implementation::create($formFields);
+            $targetModel = 'systems';
+        } else if($targetModel == 1){
+            $targetModel = 'implementations';
         } else {
-            Output::create($formFields);
+            $targetModel = 'outputs';
         }
 
-        return Redirect::back()->with('message', 'Indicator added successfully');
+        DB::insert('insert into '. $targetModel . ' (area_id, parameter_id, title, description, files) values (?, ?, ?, ?, ?)', [$areaId, $parameterId, $title, $description, $serialized]);
 
+        return Redirect::back()->with('message', 'Indicator added successfully');
     }
 
     public function destroy(Request $request){
+        $targetTable = $request->input('indicator');
+        $targetItem = $request->input('itemId');
 
-        // return response($cotent = $request);
+        $query = DB::table($targetTable)->where('id', $targetItem)->delete();
+        return $query;
+        // return [$targetItem, $targetTable];
+    }
+
+    public function edit(Request $request){
+        dd($request->all());
     }
 }
