@@ -403,10 +403,11 @@
                             enctype="multipart/form-data"
                             action="{{url('/api/data/edit-data')}}" 
                             method="POST" 
-                            class="new-sip-form mb-2">
+                            class="edit-form mb-2">
+                                <input class="target-id-field" type="hidden" name="target-id" readonly/>
+                                <input class="target-indicator-field" type="hidden" name="target-indicator" readonly/>
                                 <div class="mb-3 mx-3">
                                     <label for="area-id" class="form-label">Area No.</label>
-                                    <input class="area-id-field" type="hidden" name="area-id" readonly/>   
                                     <input type="text" class="form-control disabled edit-area-field" id="area-id" name="area" readonly>
                                 </div>
 
@@ -602,7 +603,7 @@
 
                 anchor.appendChild(image);
                 imageContainer.appendChild(anchor);
-                
+
             }
 
             //defining inner contents
@@ -656,42 +657,35 @@
 
             //eventListeners
             editButton.addEventListener('click', function(){
+                const targetId = object['id'];
                 editAreaField.value = activeArea;
                 editParameterField.value = activeParameter;
                 editIndicatorField.value = itemContainer.parentNode.parentNode.getAttribute('indicator');
                 editTitleField.value = object['title'];
                 editDescriptionField.value = object['description'];
-                
+
+                const targetIdInput = document.querySelector('.target-id-field')
+                targetIdInput.value = object['id'];
+
                 editDataModal.show();
-
                 const editDataModalImageContainer = document.querySelector('.edit-image-container');
-
                 for (var key in parsedFiles) {
-                // console.log(`${key}: ${parsedFiles[key]}`);
-                const image = document.createElement('img');
-                const anchor = document.createElement('a');
-
-                image.setAttribute(
-                    'src',
-                    "{{asset('storage/files/')}}" + "/" + parsedFiles[key]
-                );
-
-                image.classList.add('image-from-database');
-                // href="path/to/image.jpg" alt="Image description" target="_blank"
-                anchor.setAttribute('href', "{{asset('storage/files/')}}" + "/" + parsedFiles[key]);
-                anchor.setAttribute('alt', parsedFiles[key]);
-                anchor.setAttribute('target', '_blank')
-
-                anchor.appendChild(image);
-                editDataModalImageContainer.appendChild(anchor);
-                // <img class="w-100" src="{{ asset('storage/files/logo.png') }}" />
-                // console.log("{{asset('storage/files/')}}" + "/" + parsedFiles[key]);
-            }
+                    const image = document.createElement('img');
+                    const anchor = document.createElement('a');
+                    image.setAttribute(
+                        'src',
+                        "{{asset('storage/files/')}}" + "/" + parsedFiles[key]
+                    );
+                    image.classList.add('image-from-database');
+                    anchor.setAttribute('href', "{{asset('storage/files/')}}" + "/" + parsedFiles[key]);
+                    anchor.setAttribute('alt', parsedFiles[key]);
+                    anchor.setAttribute('target', '_blank')
+                    anchor.appendChild(image);
+                    editDataModalImageContainer.appendChild(anchor);
+                }
             }, false);
 
             deleteButton.addEventListener('click', function(){
-                //pass indicator type (system, implementation, outputs);
-                //pass item id to delete
                 deleteData(object['id'], itemContainer.parentNode.parentNode.getAttribute('indicator'))
             }, false);
 
@@ -757,8 +751,15 @@
             if (confirm('Are you sure you want to delete this entry from the database?')) {
                 fetch(url, {
                     method: 'POST'
+                    })
+                    .then((response) => {
+                        if (response.status == 200) {
+                            alert('Item Deleted Successfully')
+                        } else {
+                            alert('Error Deleting Item. Contact Admin Immediately')
+                        }
                     });
-
+                    
                 removeOldData();
                 showSystemObjects(activeParameterId); 
                 showImplementationsObjects(activeParameterId);

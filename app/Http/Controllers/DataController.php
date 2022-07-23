@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Output;
 use App\Models\System;
-use App\Models\Implementation;
-use Facade\FlareClient\Stacktrace\File;
 use Illuminate\Http\Request;
+use App\Models\Implementation;
 use Illuminate\Support\Facades\DB;
+use Facade\FlareClient\Stacktrace\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
 
 
@@ -112,30 +113,50 @@ class DataController extends Controller
     public function destroy(Request $request){
         $targetTable = $request->input('indicator');
         $targetItem = $request->input('itemId');
+        $images = DB::table($targetTable)->where('id', $targetItem)->get('files');
+        $images = unserialize($images[0]->files);
+
+        foreach($images as $image){
+            unlink(storage_path(('app/public/files/'.$image)));
+        }
 
         $query = DB::table($targetTable)->where('id', $targetItem)->delete();
         return $query;
-        // return [$targetItem, $targetTable];
+
+        if($query == 1){
+            return response(200);
+        } else {
+            return response(400);
+        }
     }
 
     public function edit(Request $request){
         $formFields = $request->all();
+        $targetItem = $formFields['target-id'];
+        $targetModel = $formFields['indicator'];
         $filesArray = [];
-        
-        // Delete all files related to previous selection;
-        $oldImages = DB::table('systems')->where('id', '4')->get('files');
-        $data = preg_replace_callback('!s:\d+:"(.*?)";!s', function($m) {
-            return "s:" . strlen($m[1]) . ':"'.$m[1].'";'; 
-            }, $oldImages
-        );
 
+        // dd($targetModel);
+        if($targetModel == "System - Inputs and Processes"){
+            $targetModel = 'systems';
+        } else if($targetModel == "Implementations"){
+            $targetModel = 'implementations';
+        } else {
+            $targetModel = 'outputs';
+        }
 
-        dd($formFields);
+        $row = DB::table($targetModel)->where('id', $targetItem);
 
-        // Update all information present in the formfields
-        $row = DB::table('systems')->where('id', '4');
         if(array_key_exists('files', $formFields)){
-            // dd('Image submission is working');
+            $oldImages = DB::table($targetModel)->where('id', $formFields['target-id'])->get('files');
+            $oldImages = unserialize($oldImages[0]->files);
+
+    
+            // Delete Old Files on the storage
+            foreach($oldImages as $image){
+                unlink(storage_path(('app/public/files/'.$image)));
+            }
+
             $files = $formFields['files'];
             for ($i=0; $i < count($files); $i++) { 
                 $filename = $files[$i]->getClientOriginalName();
