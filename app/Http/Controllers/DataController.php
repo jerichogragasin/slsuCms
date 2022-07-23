@@ -119,6 +119,43 @@ class DataController extends Controller
     }
 
     public function edit(Request $request){
-        dd($request->all());
+        $formFields = $request->all();
+        $filesArray = [];
+        
+        // Delete all files related to previous selection;
+        $oldImages = DB::table('systems')->where('id', '4')->get('files');
+        $data = preg_replace_callback('!s:\d+:"(.*?)";!s', function($m) {
+            return "s:" . strlen($m[1]) . ':"'.$m[1].'";'; 
+            }, $oldImages
+        );
+
+
+        dd($formFields);
+
+        // Update all information present in the formfields
+        $row = DB::table('systems')->where('id', '4');
+        if(array_key_exists('files', $formFields)){
+            // dd('Image submission is working');
+            $files = $formFields['files'];
+            for ($i=0; $i < count($files); $i++) { 
+                $filename = $files[$i]->getClientOriginalName();
+                $file = $files[$i];
+                array_push($filesArray, $filename);
+                $file->getClientOriginalName();
+                $file->storeAs('public/files', $filename);
+                }
+                $serialized = serialize($filesArray);
+                $row->update(
+                    [
+                        'title' => $formFields['title'], 
+                        'description' => $formFields['description'], 
+                        'files' => $serialized
+                    ]
+                );
+        }  else {
+            $row->update(['title' => $formFields['title'], 'description' => $formFields['description']]);
+        }
+        return Redirect::back()->with('message', 'Information updated successfully');
     }
+    
 }

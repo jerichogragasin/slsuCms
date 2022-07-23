@@ -431,11 +431,17 @@
                                 <div class="mb-3 mx-3">
                                     <label for="area-id" class="form-label">Content</label>
                                     <input type="hidden" name="MAX_FILE_SIZE" value="9000000" />
-                                    <input type="file" class="form-control" name="files[]" autocomplete="off" multiple>
+                                    <input type="file" class="form-control" onchange="readImageData(this);" name="files[]" autocomplete="off" multiple>
                                 </div>
                                 
+                                <div class="mb-3 mx-3">
+                                    <div class="edit-image-container d-flex flex-wrap gap-2">
+                                        {{-- Images Lineup --}}
+
+                                    </div>
+                                </div>
                                 <div class="mb-3 d-flex gap-2 justify-content-end me-3">
-                                    <button type="button dismiss-modal" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="button dismiss-modal" class="btn btn-secondary" data-bs-dismiss="modal">Dismiss</button>
                                     <button type="submit" class="btn btn-primary" name='submit'>Submit</button>
                                 </div>
                         </form>
@@ -474,7 +480,7 @@
         var outListSection = document.querySelector('.out-list');
         
         var addDataModal = new bootstrap.Modal(document.getElementById('add-data-modal'));  
-        var editDataModal = new window.bootstrap.Modal(document.getElementById('edit-data-modal'));
+        var editDataModal = new bootstrap.Modal(document.getElementById('edit-data-modal'));
 
         var editAreaField = document.querySelector('.edit-area-field');
         var editParameterField = document.querySelector('.edit-parameter-field');
@@ -536,9 +542,7 @@
                 } else {
                     indicatorField.value = 'Outputs';
                 }
-                
                 activeIndicator.value = node.getAttribute('indicator-id');
-
                 if(areaField.value === 'Area ' || parameterField.value.length == 0){
                     alert('Please Select Area and Parameter');
                 } else {
@@ -556,7 +560,7 @@
 
         // Functions Only
         function toggleOpen(classname){
-            console.log(classname); 
+            // console.log(classname); 
             var selected = document.querySelector(classname);
             selected.style.display = 'block';
         }
@@ -581,7 +585,7 @@
             //files related
             const parsedFiles = JSON.parse(JSON.stringify(unserialize(object['files'])));
             for (var key in parsedFiles) {
-                console.log(`${key}: ${parsedFiles[key]}`);
+                // console.log(`${key}: ${parsedFiles[key]}`);
                 const image = document.createElement('img');
                 const anchor = document.createElement('a');
 
@@ -598,9 +602,7 @@
 
                 anchor.appendChild(image);
                 imageContainer.appendChild(anchor);
-                // <img class="w-100" src="{{ asset('storage/files/logo.png') }}" />
-                // console.log("{{asset('storage/files/')}}" + "/" + parsedFiles[key]);
-
+                
             }
 
             //defining inner contents
@@ -636,7 +638,7 @@
             imageContainer.classList.add('gap-2');
             imageContainer.classList.add('border-rounded');
             imageContainer.classList.add('align-items-center');
-
+            imageContainer.classList.add('mb-3');
             
             //appending elements
             buttonContainer.appendChild(editButton);
@@ -651,7 +653,6 @@
             itemContainer.appendChild(p3);
             itemContainer.appendChild(imageContainer);
             itemContainer.appendChild(buttonContainer);
-            
 
             //eventListeners
             editButton.addEventListener('click', function(){
@@ -662,6 +663,30 @@
                 editDescriptionField.value = object['description'];
                 
                 editDataModal.show();
+
+                const editDataModalImageContainer = document.querySelector('.edit-image-container');
+
+                for (var key in parsedFiles) {
+                // console.log(`${key}: ${parsedFiles[key]}`);
+                const image = document.createElement('img');
+                const anchor = document.createElement('a');
+
+                image.setAttribute(
+                    'src',
+                    "{{asset('storage/files/')}}" + "/" + parsedFiles[key]
+                );
+
+                image.classList.add('image-from-database');
+                // href="path/to/image.jpg" alt="Image description" target="_blank"
+                anchor.setAttribute('href', "{{asset('storage/files/')}}" + "/" + parsedFiles[key]);
+                anchor.setAttribute('alt', parsedFiles[key]);
+                anchor.setAttribute('target', '_blank')
+
+                anchor.appendChild(image);
+                editDataModalImageContainer.appendChild(anchor);
+                // <img class="w-100" src="{{ asset('storage/files/logo.png') }}" />
+                // console.log("{{asset('storage/files/')}}" + "/" + parsedFiles[key]);
+            }
             }, false);
 
             deleteButton.addEventListener('click', function(){
@@ -846,5 +871,6 @@
             };  
             return _unserialize(data, 0)[2];  
         }  
+
     </script>
 @endsection
