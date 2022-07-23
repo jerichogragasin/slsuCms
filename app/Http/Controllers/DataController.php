@@ -121,8 +121,7 @@ class DataController extends Controller
         }
 
         $query = DB::table($targetTable)->where('id', $targetItem)->delete();
-        return $query;
-
+        
         if($query == 1){
             return response(200);
         } else {
