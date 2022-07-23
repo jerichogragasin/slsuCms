@@ -76,8 +76,6 @@ class DataController extends Controller
         $formFields = $request->all();
         $targetModel = $request->input('indicator-id');
 
-        // dd($formFields);
-
         $areaId = $formFields['area_id'];
         $parameterId = $formFields['parameter_id'];
         $title = $formFields['title'];
@@ -121,7 +119,7 @@ class DataController extends Controller
         }
 
         $query = DB::table($targetTable)->where('id', $targetItem)->delete();
-        
+
         if($query == 1){
             return response(200);
         } else {
